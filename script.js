@@ -2,7 +2,10 @@ import * as THREE from 'three'
 import {
     OrbitControls
 } from 'three/addons/controls/OrbitControls.js';
-import { Sky } from 'three/addons/objects/Sky.js';
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
 
 const scene = new THREE.Scene();
@@ -20,9 +23,10 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.minDistance = 2;
 controls.maxDistance = 10;
 controls.enablePan = false;
+
 camera.position.set(5, 5, 5);
 
-const ambientlight = new THREE.AmbientLight(0xffffff, 0.2);
+const ambientlight = new THREE.AmbientLight(0xffffff, 0.01);
 scene.add(ambientlight);
 
 // point light
@@ -48,10 +52,11 @@ const starMaterial = new THREE.MeshBasicMaterial({
 const starMesh = new THREE.Mesh(starGeometry, starMaterial);
 scene.add(starMesh);
 
-const earthTexture = new THREE.TextureLoader().load("https://i.imgur.com/dfLCd19.jpg")
-const earthBump = new THREE.TextureLoader().load("https://raw.githubusercontent.com/Domenicobrz/Threejs-in-practice/main/three-in-practice-3/assets/earthbump.jpg")
-const earthSpecular = new THREE.TextureLoader().load("https://raw.githubusercontent.com/Domenicobrz/Threejs-in-practice/main/three-in-practice-3/assets/earthspec.jpg")
-const cloudsTexture = new THREE.TextureLoader().load("https://raw.githubusercontent.com/miguelmota/threejs-earth/master/images/earthcloudmaptrans.jpg")
+
+const earthTexture = new THREE.TextureLoader().load("https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg")
+//const earthBump = new THREE.TextureLoader().load("")
+const earthSpecular = new THREE.TextureLoader().load("http://www.celestiamotherlode.net/catalog/images/screenshots/earth/earthspec__buzz.jpg")
+const cloudsTexture = new THREE.TextureLoader().load("https://www.solarsystemscope.com/textures/download/2k_earth_clouds.jpg")
 
 
 const geometry = new THREE.SphereGeometry(1, 100, 100);
@@ -59,10 +64,10 @@ const geometry = new THREE.SphereGeometry(1, 100, 100);
 const material = new THREE.MeshPhongMaterial({
   color: 0xaaaaaa,
   map: earthTexture,
-  bumpMap: earthBump,
+  /*bumpMap: earthBump,
   bumpScale: 0.2,
   specularMap: earthSpecular,
-  specular: 0x333333,
+  specular: 0x333333,*/
   
   side: THREE.DoubleSide
 });
@@ -110,7 +115,7 @@ function animate() {
     sphere.rotation.y += degToRad(0.0041781)
 
     console.log(sphere.rotation.y)
-    
+  
     renderer.render(scene, camera);
 }
 animate()
