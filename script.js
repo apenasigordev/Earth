@@ -1,121 +1,120 @@
-import * as THREE from 'three'
-import {
-    OrbitControls
-} from 'three/addons/controls/OrbitControls.js';
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import Stats from 'three/addons/libs/stats.module.js';
 
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+// global variables
+let scene;
+let camera;
+let renderer;
+const canvas = document.querySelector('.webgl');
 
+// scene setup
+scene = new THREE.Scene();
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({
-  powerPreference: "high-performance",
-  antialias: true, 
-  alpha: true
+// camera setup
+const fov = 60;
+const aspect = window.innerWidth / window.innerHeight;
+const near = 0.1;
+const far = 1000;
+
+camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+camera.position.z = 2;
+scene.add(camera);
+
+// renderer setup
+renderer = new THREE.WebGLRenderer({
+    canvas: canvas,
+    antialias: true,
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-var lastTime
+renderer.setPixelRatio((window.devicePixelRatio) ? window.devicePixelRatio : 1);
+renderer.autoClear = false;
+renderer.setClearColor(0x000000, 0.0);
 
+// orbit control setup
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.minDistance = 2;
-controls.maxDistance = 10;
-controls.enablePan = false;
 
-camera.position.set(5, 5, 5);
+// earth geometry
+const earthGeometry = new THREE.SphereGeometry(0.6, 32, 32);
 
-const ambientlight = new THREE.AmbientLight(0xffffff, 0.01);
-scene.add(ambientlight);
+// earth material
+const earthMaterial = new THREE.MeshPhongMaterial({
+    roughness: 1,
+    metalness: 0,
+    map: new THREE.TextureLoader().load('texture/earthmap1k.jpg'),
+    bumpMap: new THREE.TextureLoader().load('texture/earthbump.jpg'),
+    bumpScale: 0.3
+});
 
-// point light
-const light = new THREE.PointLight(0xffffff, 1)
-light.position.set(1,1,5)
+// earth mesh
+const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+scene.add(earthMesh);
 
-scene.add(light);
+// cloud Geometry
+const cloudGeometry = new THREE.SphereGeometry(0.63, 32, 32);
 
-// point light helper
-const Helper = new THREE.PointLightHelper(light);
-//scene.add(Helper);
+// cloud metarial
+const cloudMetarial = new THREE.MeshPhongMaterial({
+    map: new THREE.TextureLoader().load('texture/earthCloud.png'),
+    transparent: true,
+});
 
+// cloud mesh
+const cloudMesh = new THREE.Mesh(cloudGeometry, cloudMetarial);
+scene.add(cloudMesh);
 
-
+// galaxy geometry
 const starGeometry = new THREE.SphereGeometry(80, 64, 64);
 
 // galaxy material
 const starMaterial = new THREE.MeshBasicMaterial({
-    map : new THREE.TextureLoader().load('https://raw.githubusercontent.com/EnayetHossain/Earth/main/public/texture/galaxy.png'),
+    map : new THREE.TextureLoader().load('texture/galaxy.png'),
     side: THREE.BackSide
 });
 
+// galaxy mesh
 const starMesh = new THREE.Mesh(starGeometry, starMaterial);
 scene.add(starMesh);
 
+// ambient light
+const ambientlight = new THREE.AmbientLight(0xffffff, 0.2);
+scene.add(ambientlight);
 
-const earthTexture = new THREE.TextureLoader().load("https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg")
-//const earthBump = new THREE.TextureLoader().load("")
-const earthSpecular = new THREE.TextureLoader().load("http://www.celestiamotherlode.net/catalog/images/screenshots/earth/earthspec__buzz.jpg")
-const cloudsTexture = new THREE.TextureLoader().load("https://www.solarsystemscope.com/textures/download/2k_earth_clouds.jpg")
+// point light
+const pointLight = new THREE.PointLight(0xffffff, 1)
+pointLight.position.set(5, 3, 5);
+scene.add(pointLight);
 
+// point light helper
+const Helper = new THREE.PointLightHelper(pointLight);
+scene.add(Helper);
 
-const geometry = new THREE.SphereGeometry(1, 100, 100);
+// handling resizing
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    render();
+}, false);
 
-const material = new THREE.MeshPhongMaterial({
-  color: 0xaaaaaa,
-  map: earthTexture,
-  /*bumpMap: earthBump,
-  bumpScale: 0.2,
-  specularMap: earthSpecular,
-  specular: 0x333333,*/
-  
-  side: THREE.DoubleSide
-});
+// current fps
+const stats = Stats();
+document.body.appendChild(stats.dom);
 
-/*const material = new THREE.MeshPhongMaterial({
-    
-    lightMap: nightTexture,
-    side: THREE.DoubleSide
-});*/
-/*material.bumpMap = earthBump;
-material.bumpScale = 0.5;*/
-
-const sphere = new THREE.Mesh(geometry, material);
-
-const cloudgeometry = new THREE.SphereGeometry(1, 100, 100);
-const cloudmaterial = new THREE.MeshPhongMaterial({
-    map: cloudsTexture,
-    transparent: true,
-    opacity: 0.1
-});
-
-const cloudsphere = new THREE.Mesh(cloudgeometry, cloudmaterial);
-
-sphere.add(cloudsphere)
-
-scene.add(sphere);
-
-
-var angularSpeed = 0.2;
-var lastTime = 0;
-
-function degToRad(deg) {
-    return deg * (Math.PI / 180.0);
-}
-var timenow = new Date().getTime();
-lastTime = timenow - 365;
-var rotation = (timenow-lastTime) / 1000
-sphere.rotation.y = degToRad(rotation);
-
-function animate() {
+// spinning animation
+const animate = () => {
     requestAnimationFrame(animate);
+    starMesh.rotation.y -= 0.002;
+    earthMesh.rotation.y -= 0.0015;
+    cloudMesh.rotation.y -= 0.001;
     controls.update();
-    
-    sphere.rotation.x = degToRad(-23)
-    sphere.rotation.y += degToRad(0.0041781)
+    render();
+    stats.update();
+};
 
-    console.log(sphere.rotation.y)
-  
+// rendering
+const render = () => {
     renderer.render(scene, camera);
 }
-animate()
+
+animate();
