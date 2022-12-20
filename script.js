@@ -15,7 +15,7 @@ scene = new THREE.Scene();
 const fov = 60;
 const aspect = window.innerWidth / window.innerHeight;
 const near = 0.1;
-const far = 1000;
+const far = 10000;
 
 camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 camera.position.z = 2;
@@ -33,9 +33,28 @@ renderer.setClearColor(0x000000, 0.0);
 
 // orbit control setup
 const controls = new OrbitControls(camera, renderer.domElement);
+controls.minDistance = 2;
+controls.maxDistance = 10;
+controls.enablePan = false;
+
+// sun geometry
+const sunGeometry = new THREE.SphereGeometry(0.7, 100, 100);
+
+// sun material
+const sunMaterial = new THREE.MeshBasicMaterial({
+    roughness: 1,
+    metalness: 0,
+    map: new THREE.TextureLoader().load(""),
+    color: 0xffffff,
+});
+
+const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+sunMesh.position.set(7, 4, 7);
+
+scene.add(sunMesh);
 
 // earth geometry
-const earthGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+const earthGeometry = new THREE.SphereGeometry(0.6, 100, 100);
 
 // earth material
 const earthMaterial = new THREE.MeshPhongMaterial({
@@ -104,7 +123,7 @@ document.body.appendChild(stats.dom);
 // spinning animation
 const animate = () => {
     requestAnimationFrame(animate);
-    starMesh.rotation.y -= 0.002;
+    // starMesh.rotation.y -= 0.002;
     earthMesh.rotation.y -= 0.0015;
     cloudMesh.rotation.y -= 0.001;
     controls.update();
